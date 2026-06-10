@@ -3,11 +3,14 @@ package com.taskflow.authservice.controller;
 import com.taskflow.authservice.dto.LoginRequest;
 import com.taskflow.authservice.dto.LoginResponse;
 import com.taskflow.authservice.dto.UsuarioRequest;
+import com.taskflow.authservice.dto.UsuarioResponse;
 import com.taskflow.authservice.service.UsuarioService;
 import com.taskflow.authservice.service.JwtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,5 +28,10 @@ public class AuthController {
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         return usuarioService.login(request);
+    }
+
+    @GetMapping("/users")
+    public List<UsuarioResponse> listar() {
+        return usuarioService.listarTodos();
     }
 }

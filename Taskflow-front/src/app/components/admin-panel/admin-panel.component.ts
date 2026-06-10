@@ -147,7 +147,7 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
                       <td class="cell-id">#{{ t.id }}</td>
                       <td class="cell-title">{{ t.titulo }}</td>
                       <td class="cell-desc">{{ t.descripcion }}</td>
-                      <td class="cell-id">Usuario #{{ t.usuarioId }}</td>
+                      <td>{{ getUsuarioName(t.usuarioId) }}</td>
                       <td>
                         <select 
                           [ngModel]="t.estado" 
@@ -231,15 +231,18 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="task-user-id">ID Usuario Asignado (Opcional)</label>
-              <input 
-                type="number" 
+              <label class="form-label" for="task-user-id">Usuario Asignado (Opcional)</label>
+              <select 
                 id="task-user-id" 
                 name="usuarioId" 
                 class="form-control" 
-                [(ngModel)]="taskForm.usuarioId" 
-                placeholder="Ej. 1 (Dejar vacío para asignártela a ti)"
-              />
+                [(ngModel)]="taskForm.usuarioId"
+              >
+                <option [ngValue]="undefined">-- Seleccione un usuario (Dejar vacío para asignártela a ti) --</option>
+                @for (u of usuarios; track u.id) {
+                  <option [ngValue]="u.id">{{ u.username }} ({{ u.rol }})</option>
+                }
+              </select>
             </div>
 
             <div class="modal-footer">
@@ -623,6 +626,7 @@ export class AdminPanelComponent implements OnInit {
   // Task lists
   tareas: TareaResponse[] = [];
   filteredTareas: TareaResponse[] = [];
+  usuarios: any[] = [];
   loading = true;
 
   // Search & Filter
@@ -667,6 +671,7 @@ export class AdminPanelComponent implements OnInit {
     this.verifyAdmin();
     this.loadUserProfile();
     this.loadTareas();
+    this.loadUsuarios();
   }
 
   verifyAdmin() {
@@ -707,6 +712,25 @@ export class AdminPanelComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  loadUsuarios() {
+    this.authService.listarUsuarios().subscribe({
+      next: (data) => {
+        this.usuarios = data || [];
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error fetching registered users', err);
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  getUsuarioName(usuarioId?: number): string {
+    if (!usuarioId) return 'Sin asignar';
+    const user = this.usuarios.find(u => u.id === usuarioId);
+    return user ? user.username : `Usuario #${usuarioId}`;
   }
 
   filterTareas() {

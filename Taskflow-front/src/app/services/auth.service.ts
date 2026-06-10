@@ -87,4 +87,8 @@ export class AuthService {
     const ahora = Math.floor(Date.now() / 1000);
     return decoded.exp > ahora;
   }
+
+  listarUsuarios(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/users`);
+  }
 }

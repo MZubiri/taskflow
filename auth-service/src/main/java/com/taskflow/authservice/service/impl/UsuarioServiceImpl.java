@@ -3,6 +3,7 @@ package com.taskflow.authservice.service.impl;
 import com.taskflow.authservice.dto.LoginRequest;
 import com.taskflow.authservice.dto.LoginResponse;
 import com.taskflow.authservice.dto.UsuarioRequest;
+import com.taskflow.authservice.dto.UsuarioResponse;
 import com.taskflow.authservice.entity.Usuario;
 import com.taskflow.authservice.repository.UsuarioRepository;
 import com.taskflow.authservice.service.JwtService;
@@ -10,6 +11,8 @@ import com.taskflow.authservice.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -58,5 +61,16 @@ public class UsuarioServiceImpl implements UsuarioService {
         String token = jwtService.generarToken(usuario.getId(), usuario.getUsername(), usuario.getRol());
 
         return new LoginResponse(token, "Bearer", usuario.getUsername());
+    }
+
+    @Override
+    public List<UsuarioResponse> listarTodos() {
+        return usuarioRepository.findAll().stream()
+                .map(u -> UsuarioResponse.builder()
+                        .id(u.getId())
+                        .username(u.getUsername())
+                        .rol(u.getRol())
+                        .build())
+                .toList();
     }
 }
