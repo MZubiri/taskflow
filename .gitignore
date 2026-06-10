@@ -1,0 +1,31 @@
+# =========================================================================
+# GitIgnore Global para el Monorepo TaskFlow (Java / Maven / Spring Boot)
+# =========================================================================
+
+# Directorios de compilación de Maven (en todos los subproyectos)
+**/target/
+target/
+
+# Configuraciones y caché de IntelliJ IDEA
+**/.idea/
+.idea/
+**/*.iml
+**/*.ipr
+**/*.iws
+
+# Configuraciones de Eclipse
+**/.settings/
+**/.classpath
+**/.project
+
+# Archivos del Sistema Operativo
+**/.DS_Store
+Thumbs.db
+
+# Logs de ejecución y base de datos local temporal
+**/*.log
+**/*.sqlite
+
+# Variables de entorno o archivos de propiedades locales con contraseñas
+**/*.env
+**/*.local
