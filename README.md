@@ -6,34 +6,40 @@ Este proyecto consiste en un ecosistema de microservicios distribuido para la ge
 
 ## 1. Arquitectura del Sistema
 
-El sistema está diseñado bajo una arquitectura de microservicios distribuidos, utilizando las herramientas de **Spring Cloud** y **Netflix OSS**:
+El sistema está diseñado bajo una arquitectura de microservicios distribuidos con cliente web enriquecido, utilizando las herramientas de **Spring Cloud**, **Netflix OSS** y **Angular**:
 
 ```
-                  [ CLIENTE / POSTMAN ]
-                            │
-                            ▼ (Puerto 8080)
-                     ┌──────────────┐
-                     │ api-gateway  │ <─── Consulta direcciones
-                     └──────────────┘
-                       │          │
-        ┌──────────────┘          └──────────────┐
-        ▼ (Ruta: /api/auth/**)                   ▼ (Ruta: /api/tareas/**)
-┌────────────────┐                       ┌────────────────┐
-│  auth-service  │                       │  task-service  │
-│ (Puerto 8081)  │                       │ (Puerto 8082)  │
-└────────────────┘                       └────────────────┘
-        │ (Se registra en)                       │ (Se registra en)
-        │                                        │
-        └──────────────┐          ┌──────────────┘
-                       ▼          ▼
-                     ┌──────────────┐
-                     │  discovery   │ (Eureka Server - Puerto 8761)
-                     │   (dir. de   │
-                     │  servicios)  │
-                     └──────────────┘
+                      ┌────────────────┐
+                      │ Taskflow-front │ (Angular Portal - Puerto 4200)
+                      └────────────────┘
+                               │
+                               ▼ (Peticiones HTTP con Bearer JWT)
+                      [ CLIENTE / POSTMAN ]
+                               │
+                               ▼ (Puerto 8080)
+                        ┌──────────────┐
+                        │ api-gateway  │ <─── Consulta direcciones
+                        └──────────────┘
+                          │          │
+           ┌──────────────┘          └──────────────┐
+           ▼ (Ruta: /api/auth/**)                   ▼ (Ruta: /api/tareas/**)
+   ┌────────────────┐                       ┌────────────────┐
+   │  auth-service  │                       │  task-service  │
+   │ (Puerto 8081)  │                       │ (Puerto 8082)  │
+   └────────────────┘                       └────────────────┘
+           │ (Se registra en)                       │ (Se registra en)
+           │                                        │
+           └──────────────┐          ┌──────────────┘
+                          ▼          ▼
+                        ┌──────────────┐
+                        │  discovery   │ (Eureka Server - Puerto 8761)
+                        │   (dir. de   │
+                        │  servicios)  │
+                        └──────────────┘
 ```
 
 ### Componentes:
+0. **`Taskflow-front` (Puerto 4200)**: Cliente web desarrollado en **Angular** que implementa la UI de administración y gestión corporativa de tareas.
 1. **`discovery-server` (Puerto 8761)**: Servidor de descubrimiento de servicios con **Netflix Eureka**. Mantiene el registro dinámico de todos los microservicios activos.
 2. **`api-gateway` (Puerto 8080)**: Entrada única al sistema con **Spring Cloud Gateway**. Enruta las peticiones de forma dinámica utilizando nombres de servicio balanceados (`lb://`).
 3. **`auth-service` (Puerto 8081)**: Microservicio encargado de la gestión de usuarios, cifrado de contraseñas con BCrypt, inicio de sesión y generación de Tokens **JWT** con claims de seguridad (`idUsuario` y `rol`).
@@ -43,13 +49,12 @@ El sistema está diseñado bajo una arquitectura de microservicios distribuidos,
 
 ## 2. Tecnologías Empleadas
 
-* **Lenguaje**: Java 21
-* **Framework**: Spring Boot 3.4.0 / 3.5.x
-* **Ecosistema**: Spring Cloud (Gateway, Eureka Discovery, LoadBalancer)
-* **Seguridad**: Spring Security y JSON Web Tokens (JWT) con librería `jjwt` (v0.12.6)
+* **Backend**: Java 21 con Spring Boot 3.4.0 / 3.5.x y Spring Cloud (Gateway, Eureka Discovery)
+* **Frontend**: Angular 22 (Standalone Components, Vanilla CSS sin dependencias visuales de terceros)
+* **Seguridad**: Spring Security y JSON Web Tokens (JWT) con claims personalizados y decodificación en frontend
 * **Base de Datos**: MySQL 8.0 (Corriendo en Docker)
 * **ORM**: Spring Data JPA / Hibernate
-* **Pruebas**: Postman
+* **Pruebas**: Cliente Web integrado (Frontend) y colección de Postman
 
 ---
 
@@ -66,7 +71,7 @@ El sistema implementa seguridad basada en Tokens JWT sin estado (stateless):
 
 ## 4. Requisitos Previos
 
-1. Tener instalado **Java 21**.
+1. Tener instalado **Java 21** y **Node.js** (v18 o superior).
 2. Contar con un contenedor de **MySQL** activo. El proyecto está configurado para conectarse al puerto local **`5510`** (con usuario `root` y contraseña `admindb`).
    * *Nota: Las bases de datos `taskflow_auth` y `taskflow_tasks` se crearán de forma automática en tu MySQL en el primer arranque gracias a `createDatabaseIfNotExist=true`.*
 
@@ -74,32 +79,38 @@ El sistema implementa seguridad basada en Tokens JWT sin estado (stateless):
 
 ## 5. Instrucciones de Ejecución
 
-Abre cuatro pestañas en tu terminal y ejecuta los siguientes comandos en orden:
-
-### Paso 1: Levantar el Servidor de Descubrimiento (Eureka)
+### Método Recomendado (Orquestador Automático)
+Para iniciar todo el ecosistema (los 4 microservicios backend + el portal web frontend en Angular) con un solo comando, ejecuta el script orquestador desde la raíz del proyecto:
 ```bash
-cd discovery-server
-./mvnw spring-boot:run
+./run-project.sh
 ```
-*Espera a que el servidor inicialice en el puerto `8761`. Puedes verificar la consola gráfica ingresando a `http://localhost:8761`.*
+*Este script iniciará Eureka, los microservicios, el Gateway y el portal web en segundo plano, mostrando las URL de acceso y guardando los registros en la carpeta `./logs`.*
 
-### Paso 2: Levantar el Servicio de Autenticación
-```bash
-cd auth-service
-./mvnw spring-boot:run
-```
+---
 
-### Paso 3: Levantar el Servicio de Tareas
-```bash
-cd task-service
-./mvnw spring-boot:run
-```
+### Método Alternativo (Manual por terminales individuales)
+Si prefieres iniciar cada servicio por separado, abre 5 pestañas de terminal y ejecuta en orden:
 
-### Paso 4: Levantar el API Gateway
-```bash
-cd api-gateway
-./mvnw spring-boot:run
-```
+1. **Levantar Eureka Discovery Server (Puerto 8761)**:
+   ```bash
+   cd discovery-server && ./mvnw spring-boot:run
+   ```
+2. **Levantar Auth Service (Puerto 8081)**:
+   ```bash
+   cd auth-service && ./mvnw spring-boot:run
+   ```
+3. **Levantar Task Service (Puerto 8082)**:
+   ```bash
+   cd task-service && ./mvnw spring-boot:run
+   ```
+4. **Levantar API Gateway (Puerto 8080)**:
+   ```bash
+   cd api-gateway && ./mvnw spring-boot:run
+   ```
+5. **Levantar Angular Frontend (Puerto 4200)**:
+   ```bash
+   cd Taskflow-front && npm run start
+   ```
 
 ---
 
