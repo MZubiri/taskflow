@@ -72,7 +72,7 @@ El sistema implementa seguridad basada en Tokens JWT sin estado (stateless):
 ## 4. Requisitos Previos
 
 1. Tener instalado **Java 21** y **Node.js** (v18 o superior).
-2. Contar con un contenedor de **MySQL** activo. El proyecto está configurado para conectarse al puerto local **`5510`** (con usuario `root` y contraseña `admindb`).
+2. Contar con un contenedor de **MySQL** activo. El proyecto está configurado para conectarse al puerto local **`5510`** (con usuario `root` y contraseña `password`).
    * *Nota: Las bases de datos `taskflow_auth` y `taskflow_tasks` se crearán de forma automática en tu MySQL en el primer arranque gracias a `createDatabaseIfNotExist=true`.*
 
 ---
