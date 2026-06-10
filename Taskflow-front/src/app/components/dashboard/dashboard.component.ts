@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
@@ -154,7 +154,7 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
                         <button (click)="openEditModal(t)" class="btn-icon btn-edit" title="Editar">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
-                        <button (click)="onDelete(t.id)" class="btn-icon btn-delete" title="Eliminar">
+                        <button (click)="openDeleteModal(t.id)" class="btn-icon btn-delete" title="Eliminar">
                           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                         </button>
                       </td>
@@ -225,6 +225,27 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    }
+
+    <!-- Modal Confirmación Eliminar (Custom) -->
+    @if (showDeleteModal) {
+      <div class="modal-backdrop">
+        <div class="card modal-card delete-modal-card">
+          <div class="modal-header header-danger">
+            <h3>Confirmar Eliminación</h3>
+            <button class="btn-close" (click)="closeDeleteModal()">×</button>
+          </div>
+          <div class="modal-body">
+            <p>¿Está seguro de que desea eliminar permanentemente esta tarea? Esta acción no se puede deshacer y se borrará del sistema de forma definitiva.</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" (click)="closeDeleteModal()" class="btn btn-secondary" [disabled]="deleting">Cancelar</button>
+            <button type="button" (click)="confirmDelete()" class="btn btn-danger" [disabled]="deleting">
+              {{ deleting ? 'Eliminando...' : 'Eliminar Tarea' }}
+            </button>
+          </div>
         </div>
       </div>
     }
@@ -499,6 +520,9 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
       margin: 1.5rem;
       animation: modalFadeIn 0.2s ease-out;
     }
+    .delete-modal-card {
+      max-width: 420px;
+    }
     .modal-header {
       display: flex;
       justify-content: space-between;
@@ -511,6 +535,15 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--primary-color);
+    }
+    .header-danger h3 {
+      color: var(--error-color) !important;
+    }
+    .modal-body {
+      padding: 1rem 0;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.6;
     }
     .modal-footer {
       display: flex;
@@ -570,10 +603,16 @@ export class DashboardComponent implements OnInit {
     estado: 'PENDIENTE'
   };
 
+  // Custom Delete Modal State
+  showDeleteModal = false;
+  selectedDeleteTaskId: number | null = null;
+  deleting = false;
+
   constructor(
     private authService: AuthService, 
     private tareaService: TareaService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -594,20 +633,25 @@ export class DashboardComponent implements OnInit {
     } else {
       this.userInitials = this.username.substring(0, 2).toUpperCase();
     }
+    this.cdr.detectChanges();
   }
 
   loadTareas() {
     this.loading = true;
+    this.cdr.detectChanges();
+
     this.tareaService.listar().subscribe({
       next: (data) => {
         this.tareas = data || [];
         this.filterTareas();
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
         console.error('Error fetching tasks', err);
         this.error = 'No se pudo cargar la lista de tareas.';
+        this.cdr.detectChanges();
       }
     });
   }
@@ -631,6 +675,7 @@ export class DashboardComponent implements OnInit {
     this.pendientesCount = this.tareas.filter(t => t.estado.toUpperCase() === 'PENDIENTE').length;
     this.progresoCount = this.tareas.filter(t => t.estado.toUpperCase() === 'EN_PROGRESO').length;
     this.completadasCount = this.tareas.filter(t => t.estado.toUpperCase() === 'COMPLETADO').length;
+    this.cdr.detectChanges();
   }
 
   getStatusBadgeClass(status: string): string {
@@ -663,6 +708,7 @@ export class DashboardComponent implements OnInit {
       estado: 'PENDIENTE'
     };
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   openEditModal(tarea: TareaResponse) {
@@ -674,11 +720,13 @@ export class DashboardComponent implements OnInit {
       estado: tarea.estado
     };
     this.showModal = true;
+    this.cdr.detectChanges();
   }
 
   closeModal() {
     this.showModal = false;
     this.saving = false;
+    this.cdr.detectChanges();
   }
 
   saveTarea() {
@@ -689,6 +737,7 @@ export class DashboardComponent implements OnInit {
     
     this.saving = true;
     this.error = '';
+    this.cdr.detectChanges();
     
     if (this.isEditMode && this.selectedTaskId !== null) {
       this.tareaService.actualizar(this.selectedTaskId, this.taskForm).subscribe({
@@ -696,12 +745,16 @@ export class DashboardComponent implements OnInit {
           this.success = 'Tarea actualizada con éxito.';
           this.closeModal();
           this.loadTareas();
-          setTimeout(() => this.success = '', 3000);
+          setTimeout(() => {
+            this.success = '';
+            this.cdr.detectChanges();
+          }, 3000);
         },
         error: (err) => {
           this.saving = false;
           console.error('Error updating task', err);
           this.error = 'Ocurrió un error al actualizar la tarea.';
+          this.cdr.detectChanges();
         }
       });
     } else {
@@ -710,30 +763,57 @@ export class DashboardComponent implements OnInit {
           this.success = 'Tarea creada con éxito.';
           this.closeModal();
           this.loadTareas();
-          setTimeout(() => this.success = '', 3000);
+          setTimeout(() => {
+            this.success = '';
+            this.cdr.detectChanges();
+          }, 3000);
         },
         error: (err) => {
           this.saving = false;
           console.error('Error creating task', err);
           this.error = 'Ocurrió un error al crear la tarea.';
+          this.cdr.detectChanges();
         }
       });
     }
   }
 
-  onDelete(id: number) {
-    if (confirm('¿Está seguro de que desea eliminar esta tarea?')) {
-      this.tareaService.eliminar(id).subscribe({
-        next: () => {
-          this.success = 'Tarea eliminada exitosamente.';
-          this.loadTareas();
-          setTimeout(() => this.success = '', 3000);
-        },
-        error: (err) => {
-          console.error('Error deleting task', err);
-          this.error = 'No se pudo eliminar la tarea.';
-        }
-      });
-    }
+  // Custom Delete Modal Control
+  openDeleteModal(id: number) {
+    this.selectedDeleteTaskId = id;
+    this.showDeleteModal = true;
+    this.cdr.detectChanges();
+  }
+
+  closeDeleteModal() {
+    this.selectedDeleteTaskId = null;
+    this.showDeleteModal = false;
+    this.deleting = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmDelete() {
+    if (this.selectedDeleteTaskId === null) return;
+    this.deleting = true;
+    this.error = '';
+    this.cdr.detectChanges();
+
+    this.tareaService.eliminar(this.selectedDeleteTaskId).subscribe({
+      next: () => {
+        this.success = 'Tarea eliminada exitosamente.';
+        this.closeDeleteModal();
+        this.loadTareas();
+        setTimeout(() => {
+          this.success = '';
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: (err) => {
+        this.deleting = false;
+        console.error('Error deleting task', err);
+        this.error = 'No se pudo eliminar la tarea.';
+        this.cdr.detectChanges();
+      }
+    });
   }
 }
