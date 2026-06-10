@@ -131,7 +131,7 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
                     <th>ID</th>
                     <th>Título</th>
                     <th>Descripción</th>
-                    <th>Estado</th>
+                    <th>Estado (Editable inline)</th>
                     <th>Creado</th>
                     <th>Actualizado</th>
                     <th>Acciones</th>
@@ -144,9 +144,16 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
                       <td class="cell-title">{{ t.titulo }}</td>
                       <td class="cell-desc">{{ t.descripcion }}</td>
                       <td>
-                        <span class="badge" [class]="getStatusBadgeClass(t.estado)">
-                          {{ getEstadoLabel(t.estado) }}
-                        </span>
+                        <select 
+                          [ngModel]="t.estado" 
+                          (ngModelChange)="onStatusChange(t, $event)"
+                          [class]="getStatusSelectClass(t.estado)"
+                          class="status-select-inline"
+                        >
+                          <option value="PENDIENTE">Pendiente</option>
+                          <option value="EN_PROGRESO">En Progreso</option>
+                          <option value="COMPLETADO">Completado</option>
+                        </select>
                       </td>
                       <td>{{ t.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</td>
                       <td>{{ t.fechaActualizacion | date:'dd/MM/yyyy HH:mm' }}</td>
@@ -678,11 +685,11 @@ export class DashboardComponent implements OnInit {
     this.cdr.detectChanges();
   }
 
-  getStatusBadgeClass(status: string): string {
+  getStatusSelectClass(status: string): string {
     const s = status.toUpperCase();
-    if (s === 'PENDIENTE') return 'badge-pending';
-    if (s === 'EN_PROGRESO') return 'badge-progress';
-    if (s === 'COMPLETADO') return 'badge-completed';
+    if (s === 'PENDIENTE') return 'select-pending';
+    if (s === 'EN_PROGRESO') return 'select-progress';
+    if (s === 'COMPLETADO') return 'select-completed';
     return '';
   }
 
@@ -776,6 +783,37 @@ export class DashboardComponent implements OnInit {
         }
       });
     }
+  }
+
+  // Inline Status Change (UX improvement)
+  onStatusChange(tarea: TareaResponse, newStatus: string) {
+    this.error = '';
+    this.success = '';
+    this.cdr.detectChanges();
+
+    const request: TareaRequest = {
+      titulo: tarea.titulo,
+      descripcion: tarea.descripcion,
+      estado: newStatus,
+      usuarioId: tarea.usuarioId
+    };
+
+    this.tareaService.actualizar(tarea.id, request).subscribe({
+      next: () => {
+        tarea.estado = newStatus;
+        this.success = 'Estado de tarea actualizado con éxito.';
+        this.loadTareas(); // reload to recalculate stats and dates
+        setTimeout(() => {
+          this.success = '';
+          this.cdr.detectChanges();
+        }, 3000);
+      },
+      error: (err) => {
+        console.error('Error updating status', err);
+        this.error = 'No se pudo actualizar el estado de la tarea.';
+        this.loadTareas(); // reset selection in UI
+      }
+    });
   }
 
   // Custom Delete Modal Control

@@ -6,6 +6,7 @@ export interface TareaRequest {
   titulo: string;
   descripcion: string;
   estado: string;
+  usuarioId?: number;
 }
 
 export interface TareaResponse {
@@ -13,6 +14,7 @@ export interface TareaResponse {
   titulo: string;
   descripcion: string;
   estado: string;
+  usuarioId?: number;
   fechaCreacion: string;
   fechaActualizacion: string;
 }

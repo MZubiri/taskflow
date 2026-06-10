@@ -13,6 +13,7 @@ public class TareaResponse {
     private String titulo;
     private String descripcion;
     private String estado;
+    private Long usuarioId;
     private LocalDateTime fechaCreacion;
     private LocalDateTime fechaActualizacion;
 }

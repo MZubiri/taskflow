@@ -36,11 +36,16 @@ public class TareaServiceImpl implements TareaService {
     @Override
     public TareaResponse crear(TareaRequest request) {
         UserPrincipal principal = obtenerPrincipalActual();
+        Long targetUsuarioId = principal.id();
+        if (esAdmin(principal) && request.getUsuarioId() != null) {
+            targetUsuarioId = request.getUsuarioId();
+        }
+
         Tarea tarea = Tarea.builder()
                 .titulo(request.getTitulo())
                 .descripcion(request.getDescripcion())
                 .estado(request.getEstado())
-                .usuarioId(principal.id())
+                .usuarioId(targetUsuarioId)
                 .fechaCreacion(LocalDateTime.now())
                 .fechaActualizacion(LocalDateTime.now())
                 .build();
@@ -86,6 +91,10 @@ public class TareaServiceImpl implements TareaService {
         tarea.setEstado(request.getEstado());
         tarea.setFechaActualizacion(LocalDateTime.now());
 
+        if (esAdmin(principal) && request.getUsuarioId() != null) {
+            tarea.setUsuarioId(request.getUsuarioId());
+        }
+
         return convertirAResponse(tareaRepository.save(tarea));
     }
 
@@ -106,6 +115,7 @@ public class TareaServiceImpl implements TareaService {
                 .titulo(tarea.getTitulo())
                 .descripcion(tarea.getDescripcion())
                 .estado(tarea.getEstado())
+                .usuarioId(tarea.getUsuarioId())
                 .fechaCreacion(tarea.getFechaCreacion())
                 .fechaActualizacion(tarea.getFechaActualizacion())
                 .build();

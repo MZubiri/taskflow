@@ -13,4 +13,6 @@ public class TareaRequest {
 
     @NotBlank(message = "El estado es obligatorio")
     private String estado;
+
+    private Long usuarioId;
 }
