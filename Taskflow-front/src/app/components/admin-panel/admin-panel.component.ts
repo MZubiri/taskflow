@@ -116,8 +116,8 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
         <!-- Table Card -->
         <div class="card table-card-container">
           <div class="table-header-admin">
-            <h4>Listado de Tareas (Acceso Total)</h4>
-            <span class="badge badge-admin-info">Modo Lectura/Escritura</span>
+            <h4>Listado de Tareas</h4>
+            <span class="badge badge-admin-info">Privilegios de Administrador</span>
           </div>
 
           @if (loading) {
@@ -135,7 +135,7 @@ import { TareaService, TareaResponse, TareaRequest } from '../../services/tarea.
                     <th>Título</th>
                     <th>Descripción</th>
                     <th>Asignada A</th>
-                    <th>Estado (Editable inline)</th>
+                    <th>Estado </th>
                     <th>Creado</th>
                     <th>Actualizado</th>
                     <th>Acciones Admin</th>
