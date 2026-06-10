@@ -29,3 +29,9 @@ Thumbs.db
 # Variables de entorno o archivos de propiedades locales con contraseñas
 **/*.env
 **/*.local
+
+# Node & Angular (Frontend)
+**/node_modules/
+**/dist/
+**/.angular/
+
