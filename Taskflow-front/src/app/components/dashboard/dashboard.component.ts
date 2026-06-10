@@ -649,7 +649,8 @@ export class DashboardComponent implements OnInit {
 
     this.tareaService.listar().subscribe({
       next: (data) => {
-        this.tareas = data || [];
+        const userId = this.authService.obtenerUsuarioId();
+        this.tareas = (data || []).filter(t => t.usuarioId === userId);
         this.filterTareas();
         this.loading = false;
         this.cdr.detectChanges();
